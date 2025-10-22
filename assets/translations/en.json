@@ -1,0 +1,160 @@
+{
+  "splash": {
+    "app_name": "Bond Notifier",
+    "tagline": "Track your prize bonds easily"
+  },
+  "login": {
+    "title": "Sign in using your email and password",
+    "email": "Email",
+    "password": "Password",
+    "signin": "Sign In",
+    "forgot": "Forgot password?",
+    "continue_with": "Or continue with",
+    "google": "Sign in with Google",
+    "no_account": "Don't have an account?",
+    "signup": "Sign up"
+  },
+  "signup": {
+    "title": "Create your account",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "nid": "NID (Optional)",
+    "referral": "Referral Code (Optional)",
+    "continue": "Continue",
+    "resend": "Resend code",
+    "verify_cta": "Sign up"
+  },
+  "verify": {
+    "title": "Verify account using email",
+    "code": "Verification Code",
+    "signup": "Sign up"
+  },
+  "home": {
+    "title": "Prize Bond Checker",
+    "prize_draw": "Prize Bond Draw",
+    "add_bond": "Add New Bond",
+    "settings": "Settings",
+    "profile": "Profile",
+    "subscription": "Subscription",
+    "ads": "Advertisement",
+    "signout": "Sign out",
+    "info": "Prize bond Info",
+    "support": "Support",
+    "logout_title": "Confirm Logout",
+    "logout_message": "Are you sure you want to sign out?"
+  },
+  "common": {
+    "retry": "Retry",
+    "exit": "Exit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "ok": "OK"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "lifetime": "Lifetime",
+    "get_lifetime": "Get Lifetime at ৳999",
+    "save_text": "SAVE 12%",
+    "what_you_get": "What You Get",
+    "billed": "When will I be billed?",
+    "auto_renew": "Does my subscription auto renew?"
+  },
+  "profile": {
+    "title": "Profile",
+    "my_bonds": "My Prize Bond List",
+    "search": "Search"
+  },
+  "settings": {
+    "title": "Settings",
+    "edit_profile": "Edit Profile",
+    "change_password": "Change Password",
+    "change_language": "Change Language",
+    "referral": "Referral Code",
+    "signout": "Sign out"
+  },
+  "edit_profile": {
+    "title": "Edit Profile",
+    "update": "Update",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "nid": "NID (Optional)"
+  },
+  "change_password": {
+    "title": "Change Password",
+    "old": "Old Password",
+    "new": "New Password",
+    "confirm": "Confirm Password",
+    "update": "Update"
+  },
+  "change_language": {
+    "title": "Change Language",
+    "save": "Save"
+  },
+  "referral": {
+    "title": "Referral Code",
+    "apply": "Apply"
+  },
+  "draw": {
+    "title": "Prize Bond Checker",
+    "check": "Check My Bonds",
+    "to": "Draw To",
+    "from": "Draw From",
+    "series": "Series",
+    "number": "Number"
+  },
+  "congrats": {
+    "title": "Congratulations",
+    "youwin": "You Won",
+    "refresh": "Refresh"
+  },
+  "common": {
+    "retry": "Retry",
+    "exit": "Exit",
+    "save": "Save"
+  },
+  "lang": {
+    "en": "English",
+    "bn": "Bangla"
+  },
+  "no_internet": {
+    "title": "No Internet",
+    "msg": "You're offline. Please check your connection."
+  },
+  "forgot": {
+    "title": "Reset your password",
+    "subtitle": "Enter your email, and we’ll send you an OTP",
+    "send": "Send OTP",
+    "reset_title": "Set new password",
+    "reset_subtitle": "Enter OTP, new password, and confirm it",
+    "success": "Password changed successfully!"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "all_title": "All Notifications (23)",
+    "filter_all": "All",
+    "filter_read": "Read",
+    "filter_unread": "Unread",
+    "sample_title": "Lorem Ipsum is simply dummy text",
+    "sample_body": "This is a sample notification text.",
+    "time": "{{0}} ago"
+  },
+  "add_bond": {
+    "title": "Add New Bond",
+    "single": "Single",
+    "multiple": "Multiple",
+    "series": "Prize Bond Series",
+    "select_series": "Select Series",
+    "number": "Prize Bond Number",
+    "hint_number": "Enter Prize Bond Number",
+    "range": "Starting Prize Bond Number",
+    "count": "Number of Bonds",
+    "hint_count": "Enter Number of Bonds",
+    "add": "Add"
+  }
+}
