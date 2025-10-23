@@ -18,7 +18,11 @@ class _SignupViewState extends State<SignupView> {
   final email = TextEditingController();
   final nid = TextEditingController();
   final referral = TextEditingController();
+  final pass = TextEditingController();
+  final confirm = TextEditingController();
 
+  bool _obscure1 = true;
+  bool _obscure2 = true;
   bool _loading = false;
 
   @override
@@ -28,6 +32,8 @@ class _SignupViewState extends State<SignupView> {
     email.dispose();
     nid.dispose();
     referral.dispose();
+    pass.dispose();
+    confirm.dispose();
     super.dispose();
   }
 
@@ -38,7 +44,6 @@ class _SignupViewState extends State<SignupView> {
 
     return Scaffold(
       body: Stack(children: [
-        // 🌿 Background Gradient
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -48,7 +53,6 @@ class _SignupViewState extends State<SignupView> {
             ),
           ),
         ),
-
         SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(
@@ -56,7 +60,6 @@ class _SignupViewState extends State<SignupView> {
               vertical: size.height * 0.02,
             ),
             child: Column(children: [
-              // 🌐 Language Switch
               Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                 _langButton(context, 'en', 'assets/icons/flag_uk.png', 'English'),
                 const SizedBox(width: 8),
@@ -64,27 +67,14 @@ class _SignupViewState extends State<SignupView> {
               ]),
               const SizedBox(height: 50),
 
-              // 🖼️ Logo
-              Image.asset(
-                'assets/icons/logo.png',
-                width: 90,
-                height: 90,
-                fit: BoxFit.contain,
-              ),
+              Image.asset('assets/icons/logo.png', width: 90, height: 90),
               const SizedBox(height: 24),
 
-              // 🧾 Title
-              Text(
-                tr('signup.title'),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
+              Text(tr('signup.title'),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.w700)),
               const SizedBox(height: 24),
 
-              // 📝 Form Fields
               _buildField(name, tr('signup.name'), Icons.person_outline),
               const SizedBox(height: 12),
               _buildField(phone, tr('signup.phone'), Icons.phone,
@@ -96,31 +86,90 @@ class _SignupViewState extends State<SignupView> {
               _buildField(nid, tr('signup.nid'), Icons.credit_card),
               const SizedBox(height: 12),
               _buildField(referral, tr('signup.referral'), Icons.card_giftcard),
+              const SizedBox(height: 12),
+
+              // 🔐 Password
+              TextField(
+                controller: pass,
+                obscureText: _obscure1,
+                decoration: InputDecoration(
+                  hintText: tr('signup.password'),
+                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                        _obscure1
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: Colors.grey),
+                    onPressed: () => setState(() => _obscure1 = !_obscure1),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ✅ Confirm password
+              TextField(
+                controller: confirm,
+                obscureText: _obscure2,
+                decoration: InputDecoration(
+                  hintText: tr('signup.confirm_password'),
+                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                        _obscure2
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: Colors.grey),
+                    onPressed: () => setState(() => _obscure2 = !_obscure2),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
 
-              // ✅ Continue Button
+              // Continue
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _loading
                       ? null
                       : () async {
-                    if (email.text.isEmpty ||
-                        name.text.isEmpty ||
-                        phone.text.isEmpty) {
+                    if (name.text.isEmpty ||
+                        phone.text.isEmpty ||
+                        email.text.isEmpty ||
+                        pass.text.isEmpty ||
+                        confirm.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                            content:
-                            Text("Please fill in all required fields")),
+                            content: Text("Please fill all fields")),
+                      );
+                      return;
+                    }
+                    if (pass.text != confirm.text) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Passwords do not match")),
                       );
                       return;
                     }
 
                     setState(() => _loading = true);
-                    final ok = await context.read<AuthViewModel>().register(
+                    final ok =
+                    await context.read<AuthViewModel>().register(
                       name: name.text.trim(),
                       phone: phone.text.trim(),
                       email: email.text.trim(),
+                      password: pass.text.trim(),
+                      confirmPassword: confirm.text.trim(),
                       nid: nid.text.trim(),
                       referral: referral.text.trim(),
                     );
@@ -133,9 +182,10 @@ class _SignupViewState extends State<SignupView> {
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                            content: Text(
-                                context.read<AuthViewModel>().error ??
-                                    tr('common.retry'))),
+                            content: Text(context
+                                .read<AuthViewModel>()
+                                .error ??
+                                tr('common.retry'))),
                       );
                     }
                   },
@@ -143,113 +193,18 @@ class _SignupViewState extends State<SignupView> {
                     backgroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   child: _loading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
                     tr('signup.continue'),
                     style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white),
                   ),
                 ),
               ),
-              const SizedBox(height: 18),
-
-              // Divider
-              Row(children: [
-                Expanded(child: Divider(color: cs.outlineVariant)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    tr('signup.or_continue'),
-                    style: TextStyle(color: cs.onSurface.withOpacity(.7)),
-                  ),
-                ),
-                Expanded(child: Divider(color: cs.outlineVariant)),
-              ]),
-              const SizedBox(height: 14),
-
-              // 🔘 Google Sign-in
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: Image.asset('assets/icons/google.png', height: 20),
-                  label: Text(
-                    tr('signup.google'),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.primary,
-                    side: const BorderSide(color: AppTheme.primary),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    backgroundColor: const Color(0xFFDDF5DD),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Terms
-              Text(
-                'By continuing, you agree to Conditions of Use and Privacy Notice.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: cs.onSurface.withOpacity(.6),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // 🆕 Already Have Account → Login
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () =>
-                      Navigator.pushReplacementNamed(context, AppRoutes.login),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor:
-                    cs.surfaceContainerHighest.withOpacity(.35),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Text(
-                    tr('signup.have_account'),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Footer
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 16,
-                children: const [
-                  _FooterText('Conditions of Use'),
-                  _FooterText('Privacy Notice'),
-                  _FooterText('Help'),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '© 2025, Prize bond checker',
-                style: TextStyle(
-                    fontSize: 12.5,
-                    color: cs.onSurface.withOpacity(.55)),
-              ),
-              const SizedBox(height: 24),
             ]),
           ),
         ),
@@ -257,9 +212,7 @@ class _SignupViewState extends State<SignupView> {
     );
   }
 
-  /// 🌐 Language Switch Widget
-  Widget _langButton(
-      BuildContext context, String code, String asset, String label) {
+  Widget _langButton(BuildContext context, String code, String asset, String label) {
     final active = context.locale.languageCode == code;
     return GestureDetector(
       onTap: () async {
@@ -269,28 +222,21 @@ class _SignupViewState extends State<SignupView> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: active ? AppTheme.primary.withOpacity(0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Image.asset(asset, height: 16),
-            const SizedBox(width: 4),
-            Text(
-              label,
+            color: active ? AppTheme.primary.withOpacity(0.15) : Colors.transparent,
+            borderRadius: BorderRadius.circular(20)),
+        child: Row(children: [
+          Image.asset(asset, height: 16),
+          const SizedBox(width: 4),
+          Text(label,
               style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: active ? AppTheme.primary : Colors.black87,
-              ),
-            ),
-          ],
-        ),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: active ? AppTheme.primary : Colors.black87))
+        ]),
       ),
     );
   }
 
-  /// 🧾 Input Field Builder
   Widget _buildField(TextEditingController ctrl, String hint, IconData icon,
       {TextInputType? type}) {
     return TextField(
@@ -318,13 +264,11 @@ class _FooterText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 12.5,
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(.7),
-        decoration: TextDecoration.underline,
-      ),
-    );
+    return Text(text,
+        style: TextStyle(
+            fontSize: 12.5,
+            color:
+            Theme.of(context).colorScheme.onSurface.withOpacity(.7),
+            decoration: TextDecoration.underline));
   }
 }

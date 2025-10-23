@@ -13,7 +13,9 @@ class AuthViewModel extends ChangeNotifier {
   bool get isLoading => _loading;
   String? get error => _error;
 
-  /// Try to attach token automatically if already stored
+  // -----------------------------------
+  // Try auto-attach saved token
+  // -----------------------------------
   Future<bool> tryAutoAttachToken() async {
     final token = await TokenStorage.getToken();
     if (token != null && token.isNotEmpty) {
@@ -23,10 +25,12 @@ class AuthViewModel extends ChangeNotifier {
     return false;
   }
 
-  /// Check login status from local storage
+  // Check local login status
   Future<bool> isLoggedIn() => TokenStorage.isLoggedIn();
 
-  /// Login process
+  // -----------------------------------
+  // LOGIN
+  // -----------------------------------
   Future<bool> login(String email, String password) async {
     _setLoading(true);
     final res = await _repo.login(email: email, password: password);
@@ -42,11 +46,15 @@ class AuthViewModel extends ChangeNotifier {
     return ok;
   }
 
-  /// Registration process
+  // -----------------------------------
+  // REGISTER
+  // -----------------------------------
   Future<bool> register({
     required String name,
     required String phone,
     required String email,
+    required String password,
+    required String confirmPassword,
     String? nid,
     String? referral,
   }) async {
@@ -55,6 +63,8 @@ class AuthViewModel extends ChangeNotifier {
       name: name,
       phone: phone,
       email: email,
+      password: password,
+      confirmPassword: confirmPassword,
       nid: nid,
       referral: referral,
     );
@@ -66,7 +76,9 @@ class AuthViewModel extends ChangeNotifier {
     return ok;
   }
 
-  /// Verify OTP after registration
+  // -----------------------------------
+  // VERIFY OTP
+  // -----------------------------------
   Future<bool> verifyOtp(String otp) async {
     final email = await TokenStorage.getPendingEmail() ?? '';
     if (email.isEmpty) {
@@ -84,21 +96,22 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     if (ok) {
-      // Verified → consider user as logged-in so next is home
       await _repo.persistLogin(token: null, email: email);
     }
     return ok;
   }
 
-  /// Logout
+  // -----------------------------------
+  // LOGOUT
+  // -----------------------------------
   Future<void> logout() async {
     await _repo.logout();
     notifyListeners();
   }
 
-  // --------------------------
-  // PRIVATE HELPERS
-  // --------------------------
+  // -----------------------------------
+  // Private helper
+  // -----------------------------------
   void _setLoading(bool value) {
     _loading = value;
     notifyListeners();

@@ -5,7 +5,7 @@ import '../../core/storage/token_storage.dart';
 
 /// 🔐 Handles all authentication API requests:
 /// - Login
-/// - Register
+/// - Register (with password + confirmation)
 /// - Verify OTP
 /// - Logout
 /// - Persist user session
@@ -27,12 +27,7 @@ class AuthRepository {
 
       if (res.statusCode == 200 && res.data['status'] == 'success') {
         final token = res.data['token'] ?? res.data['payload']?['token'];
-
-        return {
-          'ok': true,
-          'message': null,
-          'token': token,
-        };
+        return {'ok': true, 'message': null, 'token': token};
       }
 
       return {
@@ -59,12 +54,14 @@ class AuthRepository {
   }
 
   // -------------------------
-  // REGISTER
+  // REGISTER (now with password + confirmation)
   // -------------------------
   Future<Map<String, dynamic>> register({
     required String name,
     required String phone,
     required String email,
+    required String password,
+    required String confirmPassword,
     String? nid,
     String? referral,
   }) async {
@@ -75,8 +72,8 @@ class AuthRepository {
           'name': name,
           'email': email,
           'phone': phone,
-          'password': '123456', // Demo value
-          'password_confirmation': '123456',
+          'password': password,
+          'password_confirmation': confirmPassword,
           'nid': nid ?? '',
           'referred_by': referral ?? '',
         },
@@ -146,7 +143,7 @@ class AuthRepository {
   }
 
   // -------------------------
-  // LOGOUT (CLEAR ALL LOCAL DATA)
+  // LOGOUT
   // -------------------------
   Future<void> logout() async {
     await TokenStorage.clearAll();
