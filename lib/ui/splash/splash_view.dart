@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
 import '../../core/utils/app_routes.dart';
 import '../../core/theme/app_theme.dart';
+import '../../viewmodels/auth_view_model.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -15,9 +17,23 @@ class _SplashViewState extends State<SplashView> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 2), () {
+    _checkAuthAndNavigate();
+  }
+
+  Future<void> _checkAuthAndNavigate() async {
+    await Future.delayed(const Duration(seconds: 2));
+
+    final authVM = context.read<AuthViewModel>();
+    final isLoggedIn = await authVM.isLoggedIn();
+
+    if (!mounted) return;
+
+    if (isLoggedIn) {
+      await authVM.tryAutoAttachToken();
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } else {
       Navigator.pushReplacementNamed(context, AppRoutes.login);
-    });
+    }
   }
 
   @override
@@ -39,7 +55,7 @@ class _SplashViewState extends State<SplashView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Only logo without border or background
+              // Logo
               Image.asset(
                 'assets/icons/logo.png',
                 width: 120,
@@ -59,7 +75,7 @@ class _SplashViewState extends State<SplashView> {
                 ),
               ),
 
-              // Optional tagline (you can remove if not needed)
+              // Tagline
               const SizedBox(height: 6),
               Text(
                 'splash.tagline'.tr(),

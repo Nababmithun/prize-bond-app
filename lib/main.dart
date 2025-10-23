@@ -6,10 +6,7 @@ import 'core/theme/app_theme.dart';
 import 'core/utils/app_routes.dart';
 import 'core/utils/internet_checker.dart';
 import 'data/repositories/auth_repository.dart';
-import 'data/repositories/bond_repository.dart';
 import 'viewmodels/auth_view_model.dart';
-import 'viewmodels/bond_view_model.dart';
-import 'viewmodels/settings_view_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,15 +30,7 @@ class BondNotifierApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => SettingsViewModel()),
-        Provider(create: (_) => AuthRepository()),
-        Provider(create: (_) => BondRepository()),
-        ChangeNotifierProvider(
-          create: (c) => AuthViewModel(c.read<AuthRepository>()),
-        ),
-        ChangeNotifierProvider(
-          create: (c) => BondViewModel(c.read<BondRepository>()),
-        ),
+        ChangeNotifierProvider(create: (_) => AuthViewModel(AuthRepository())),
       ],
       child: Builder(
         builder: (context) {

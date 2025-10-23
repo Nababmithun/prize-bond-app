@@ -20,12 +20,12 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final vm = context.watch<AuthViewModel>();
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
       body: Stack(
         children: [
-          // 🌿 Background Gradient
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -45,7 +45,6 @@ class _LoginViewState extends State<LoginView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // 🌐 Language Switch
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -56,103 +55,83 @@ class _LoginViewState extends State<LoginView> {
                   ),
                   const SizedBox(height: 50),
 
-                  // 🖼️ Logo (Replaced Icon with logo.png)
-                  Image.asset(
-                    'assets/icons/logo.png',
-                    width: 90,
-                    height: 90,
-                    fit: BoxFit.contain,
-                  ),
+                  Image.asset('assets/icons/logo.png', width: 90, height: 90),
                   const SizedBox(height: 24),
 
-                  // 🧾 Title
-                  Text(
-                    tr('login.title'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 17.5,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                    ),
-                  ),
+                  Text(tr('login.title'),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      )),
                   const SizedBox(height: 24),
 
-                  // 📧 Email Field
                   TextField(
                     controller: email,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       hintText: tr('login.email'),
-                      prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
+                      prefixIcon: const Icon(Icons.email_outlined),
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5C0), width: 1),
                       ),
                     ),
                   ),
                   const SizedBox(height: 14),
 
-                  // 🔐 Password Field
                   TextField(
                     controller: pass,
                     obscureText: _obscure,
                     decoration: InputDecoration(
                       hintText: tr('login.password'),
-                      prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                      prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscure
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
-                          color: Colors.grey,
                         ),
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5C0), width: 1),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
-                  // 🔗 Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
                         Navigator.pushNamed(context, AppRoutes.forgotEmail);
                       },
-                      child: Text(
-                        tr('login.forgot'),
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: Text(tr('login.forgot')),
                     ),
                   ),
 
-                  // ✅ Sign In Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        final ok = await context
-                            .read<AuthViewModel>()
-                            .login(email.text.trim(), pass.text);
+                      onPressed: vm.isLoading
+                          ? null
+                          : () async {
+                        final ok = await vm.login(
+                          email.text.trim(),
+                          pass.text.trim(),
+                        );
                         if (!mounted) return;
                         if (ok) {
                           Navigator.pushReplacementNamed(context, AppRoutes.home);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(tr('common.retry'))),
+                            SnackBar(
+                              content: Text(vm.error ?? tr('common.retry')),
+                            ),
                           );
                         }
                       },
@@ -163,18 +142,19 @@ class _LoginViewState extends State<LoginView> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
+                      child: vm.isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text(
                         tr('login.signin'),
                         style: const TextStyle(
-                          fontWeight: FontWeight.w700,
                           color: Colors.white,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 14),
 
-                  // Divider
                   Row(
                     children: [
                       Expanded(child: Divider(color: cs.outlineVariant)),
@@ -190,47 +170,22 @@ class _LoginViewState extends State<LoginView> {
                   ),
                   const SizedBox(height: 14),
 
-                  // 🔘 Google Sign-in
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () {},
                       icon: Image.asset('assets/icons/google.png', height: 20),
-                      label: Text(
-                        tr('login.google'),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                        ),
-                      ),
+                      label: Text(tr('login.google')),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.primary,
                         side: const BorderSide(color: AppTheme.primary),
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
                         backgroundColor: const Color(0xFFDDF5DD),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // 📜 Terms
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      'By continuing, you agree to Conditions of Use and Privacy Notice.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: cs.onSurface.withOpacity(.6),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // 🆕 Signup Button
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
@@ -238,21 +193,16 @@ class _LoginViewState extends State<LoginView> {
                           Navigator.pushNamed(context, AppRoutes.signup),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor:
-                        cs.surfaceContainerHighest.withOpacity(.35),
+                        backgroundColor: cs.surfaceContainerHighest.withOpacity(.35),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
-                        tr('login.signup'),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
+                      child: Text(tr('login.signup'),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // 📑 Footer
+                  const SizedBox(height: 20),
                   _footer(context),
                 ],
               ),
@@ -263,9 +213,7 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  // 🌐 Language Button
-  Widget _langButton(
-      BuildContext context, String code, String asset, String label) {
+  Widget _langButton(BuildContext context, String code, String asset, String label) {
     final active = context.locale.languageCode == code;
     return GestureDetector(
       onTap: () async {
@@ -296,7 +244,6 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  // Footer
   Widget _footer(BuildContext context) => Column(
     children: [
       Wrap(
@@ -320,7 +267,6 @@ class _LoginViewState extends State<LoginView> {
   );
 }
 
-// Footer Link Text
 class _FooterText extends StatelessWidget {
   final String text;
   const _FooterText(this.text);
