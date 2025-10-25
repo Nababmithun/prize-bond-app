@@ -1,49 +1,71 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:easy_localization/easy_localization.dart';
 
+/// Monitors internet connectivity + simple DNS reachability check,
+/// and shows a blocking "No Internet" dialog until connectivity is restored.
+///
+/// How to use:
+///   InternetChecker.startListening(context);
+///   ...
+///   InternetChecker.dispose(); // e.g., on app exit
 class InternetChecker {
+  InternetChecker._();
+
   static final Connectivity _connectivity = Connectivity();
   static StreamSubscription<ConnectivityResult>? _subscription;
+
+  /// Prevents multiple dialogs.
   static bool _dialogShown = false;
 
+  /// Begin listening to connectivity changes.
+  /// Safe to call once (subsequent calls are ignored).
   static void startListening(BuildContext context) {
     // Prevent double subscription
     if (_subscription != null) return;
 
-    // ✅ Delay 1s so context is mounted (important for splash)
+    // Delay so that navigator/context is ready (esp. on splash)
     Future.delayed(const Duration(seconds: 1), () async {
+      // Initial manual check
       await _manualCheck(context);
 
-      _subscription = _connectivity.onConnectivityChanged.listen((result) async {
-        if (result == null) return;
-
-        final offline = await _isOffline(result as ConnectivityResult);
-        if (offline) {
-          _showNoInternetDialog(context);
-        } else {
-          if (_dialogShown && Navigator.canPop(context)) {
-            Navigator.of(context, rootNavigator: true).pop();
-            _dialogShown = false;
+      // Subscribe to connectivity changes
+      _subscription = _connectivity.onConnectivityChanged.listen(
+            (ConnectivityResult result) async {
+          final offline = await _isOffline(result);
+          if (offline) {
+            _showNoInternetDialog(context);
+          } else {
+            // Close dialog if open
+            if (_dialogShown) {
+              final navigator = Navigator.of(context, rootNavigator: true);
+              if (navigator.canPop()) {
+                navigator.pop();
+              }
+              _dialogShown = false;
+            }
           }
-        }
-      }) as StreamSubscription<ConnectivityResult>?;
+        } as void Function(List<ConnectivityResult> event)?,
+      ) as StreamSubscription<ConnectivityResult>?;
     });
   }
 
+  /// Do a one-off connectivity + DNS check and show dialog if offline.
   static Future<void> _manualCheck(BuildContext context) async {
     final result = await _connectivity.checkConnectivity();
-    if (result == null) return;
-
     final offline = await _isOffline(result as ConnectivityResult);
     if (offline) {
       _showNoInternetDialog(context);
     }
   }
 
+  /// Consider offline if:
+  ///  - No network (ConnectivityResult.none), OR
+  ///  - DNS lookup to example.com fails or times out.
   static Future<bool> _isOffline(ConnectivityResult result) async {
     if (result == ConnectivityResult.none) return true;
 
@@ -58,8 +80,12 @@ class InternetChecker {
     }
   }
 
+  /// Show a blocking "No Internet" dialog.
   static void _showNoInternetDialog(BuildContext context) {
-    if (_dialogShown || !context.mounted) return;
+    // BuildContext.mounted is available in recent Flutter; guard anyway:
+    if (_dialogShown) return;
+    if (!context.mounted) return;
+
     _dialogShown = true;
 
     showDialog(
@@ -77,6 +103,7 @@ class InternetChecker {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Icon
                 Container(
                   height: 80,
                   width: 80,
@@ -88,6 +115,8 @@ class InternetChecker {
                       size: 50, color: Colors.redAccent),
                 ),
                 const SizedBox(height: 20),
+
+                // Title
                 Text(
                   'no_internet.title'.tr(),
                   textAlign: TextAlign.center,
@@ -98,6 +127,8 @@ class InternetChecker {
                   ),
                 ),
                 const SizedBox(height: 10),
+
+                // Message
                 Text(
                   'no_internet.msg'.tr(),
                   textAlign: TextAlign.center,
@@ -107,6 +138,8 @@ class InternetChecker {
                   ),
                 ),
                 const SizedBox(height: 26),
+
+                // Actions
                 Row(
                   children: [
                     Expanded(
@@ -118,13 +151,15 @@ class InternetChecker {
                           side: const BorderSide(color: Colors.redAccent),
                         ),
                         onPressed: _exitApp,
-                        icon: const Icon(Icons.exit_to_app, color: Colors.redAccent),
+                        icon: const Icon(Icons.exit_to_app,
+                            color: Colors.redAccent),
                         label: Text(
                           'common.exit'.tr(),
                           style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.redAccent),
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.redAccent,
+                          ),
                         ),
                       ),
                     ),
@@ -138,13 +173,17 @@ class InternetChecker {
                               borderRadius: BorderRadius.circular(14)),
                         ),
                         onPressed: () async {
-                          final result = await _connectivity.checkConnectivity();
+                          final result =
+                          await _connectivity.checkConnectivity();
                           final ok = !(await _isOffline(result as ConnectivityResult));
                           if (ok) {
-                            if (Navigator.canPop(context)) {
-                              Navigator.of(context, rootNavigator: true).pop();
-                              _dialogShown = false;
+                            // Close dialog
+                            final navigator =
+                            Navigator.of(context, rootNavigator: true);
+                            if (navigator.canPop()) {
+                              navigator.pop();
                             }
+                            _dialogShown = false;
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -158,9 +197,10 @@ class InternetChecker {
                         label: Text(
                           'common.retry'.tr(),
                           style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -174,16 +214,20 @@ class InternetChecker {
     );
   }
 
+  /// Exit the app gracefully.
   static void _exitApp() {
     if (Platform.isAndroid) {
       SystemNavigator.pop();
     } else {
+      // iOS & others: force exit (not recommended usually)
       exit(0);
     }
   }
 
+  /// Stop listening and clean up.
   static void dispose() {
     _subscription?.cancel();
     _subscription = null;
+    _dialogShown = false;
   }
 }

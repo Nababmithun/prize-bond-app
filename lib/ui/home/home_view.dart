@@ -5,6 +5,13 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_routes.dart';
 import '../../viewmodels/auth_view_model.dart';
 
+/// ---------------------------------------------------------------------------
+/// HOME VIEW
+/// ---------------------------------------------------------------------------
+/// - Displays main feature grid (Add Bond, Prize Draw, Settings, etc.)
+/// - Handles logout flow with confirmation dialog.
+/// - Fully localized using EasyLocalization.
+/// ---------------------------------------------------------------------------
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
@@ -23,7 +30,7 @@ class _HomeViewState extends State<HomeView> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background gradient
+          ///  Background
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -34,6 +41,7 @@ class _HomeViewState extends State<HomeView> {
             ),
           ),
 
+          ///  Page Body
           SafeArea(
             child: ListView(
               padding: EdgeInsets.symmetric(
@@ -41,200 +49,15 @@ class _HomeViewState extends State<HomeView> {
                 vertical: size.height * 0.02,
               ),
               children: [
-                // Header card
-                Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      // Logo
-                      Container(
-                        height: 60,
-                        width: 60,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: DecorationImage(
-                            image: AssetImage('assets/icons/logo.png'),
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Title section
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'home.title'.tr(),
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Row(
-                              children: [
-                                Text(
-                                  'home.info'.tr(),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: cs.onSurface.withOpacity(.6),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  'home.support'.tr(),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: cs.onSurface.withOpacity(.6),
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.notifications_outlined,
-                            color: AppTheme.primary),
-                        onPressed: () => Navigator.pushNamed(
-                            context, AppRoutes.notifications),
-                      ),
-                    ],
-                  ),
-                ),
-
+                _buildHeader(cs),
                 const SizedBox(height: 24),
-
-                // Buttons grid
-                Row(
-                  children: [
-                    Expanded(
-                      child: _HomeButton(
-                        icon: Icons.card_giftcard,
-                        label: 'home.prize_draw'.tr(),
-                        onTap: () =>
-                            Navigator.pushNamed(context, AppRoutes.draw),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _HomeButton(
-                        icon: Icons.add_circle_outline,
-                        label: 'home.add_bond'.tr(),
-                        onTap: () => Navigator.pushNamed(
-                            context, AppRoutes.addBondSingle),
-                      ),
-                    ),
-                  ],
-                ),
+                _buildGridButtons(),
                 const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: _HomeButton(
-                        icon: Icons.settings_outlined,
-                        label: 'home.settings'.tr(),
-                        onTap: () async {
-                          await Navigator.pushNamed(context, AppRoutes.settings);
-                          setState(() {}); // 🔄 Rebuild for language change
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _HomeButton(
-                        icon: Icons.person_outline,
-                        label: 'home.profile'.tr(),
-                        onTap: () =>
-                            Navigator.pushNamed(context, AppRoutes.profile),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Subscription full width
-                _HomeButton(
-                  icon: Icons.lock_outline,
-                  label: 'home.subscription'.tr(),
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.subscription),
-                  fullWidth: true,
-                ),
-
+                _buildSubscriptionButton(),
                 const SizedBox(height: 20),
-
-                // Ads box
-                Container(
-                  height: 100,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'home.ads'.tr(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ),
-                ),
-
+                _buildAdBox(),
                 const SizedBox(height: 20),
-
-                // 🚪 Sign out button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: _loggingOut
-                        ? null
-                        : () => _showLogoutDialog(context),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFFDDF5DD),
-                      side: BorderSide.none,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: _loggingOut
-                        ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: AppTheme.primary,
-                        strokeWidth: 2,
-                      ),
-                    )
-                        : Text(
-                      'home.signout'.tr(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
+                _buildLogoutButton(),
               ],
             ),
           ),
@@ -243,7 +66,220 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  /// Logout Confirmation Dialog
+  // ---------------------------------------------------------------------------
+  //  HEADER CARD
+  // ---------------------------------------------------------------------------
+  Widget _buildHeader(ColorScheme cs) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Logo
+          Container(
+            height: 60,
+            width: 60,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                image: AssetImage('assets/icons/logo.png'),
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Title + Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'home.title'.tr(),
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Text(
+                      'home.info'.tr(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurface.withOpacity(.6),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'home.support'.tr(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurface.withOpacity(.6),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+
+          // Notification button
+          IconButton(
+            icon: const Icon(
+              Icons.notifications_outlined,
+              color: AppTheme.primary,
+            ),
+            onPressed: () =>
+                Navigator.pushNamed(context, AppRoutes.notifications),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  //  GRID BUTTONS (MAIN ACTIONS)
+  // ---------------------------------------------------------------------------
+  Widget _buildGridButtons() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _HomeButton(
+                icon: Icons.card_giftcard,
+                label: 'home.prize_draw'.tr(),
+                onTap: () =>
+                    Navigator.pushNamed(context, AppRoutes.draw),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _HomeButton(
+                icon: Icons.add_circle_outline,
+                label: 'home.add_bond'.tr(),
+                onTap: () =>
+                    Navigator.pushNamed(context, AppRoutes.addBondSingle),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _HomeButton(
+                icon: Icons.settings_outlined,
+                label: 'home.settings'.tr(),
+                onTap: () async {
+                  await Navigator.pushNamed(context, AppRoutes.settings);
+                  setState(() {}); // rebuild if language changed
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _HomeButton(
+                icon: Icons.person_outline,
+                label: 'home.profile'.tr(),
+                onTap: () =>
+                    Navigator.pushNamed(context, AppRoutes.profile),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  //  SUBSCRIPTION BUTTON
+  // ---------------------------------------------------------------------------
+  Widget _buildSubscriptionButton() {
+    return _HomeButton(
+      icon: Icons.lock_outline,
+      label: 'home.subscription'.tr(),
+      onTap: () => Navigator.pushNamed(context, AppRoutes.subscription),
+      fullWidth: true,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  //  ADS BOX
+  // ---------------------------------------------------------------------------
+  Widget _buildAdBox() {
+    return Container(
+      height: 100,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Center(
+        child: Text(
+          'home.ads'.tr(),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.black54,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  //  LOGOUT BUTTON
+  // ---------------------------------------------------------------------------
+  Widget _buildLogoutButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: _loggingOut ? null : () => _showLogoutDialog(context),
+        style: OutlinedButton.styleFrom(
+          backgroundColor: const Color(0xFFDDF5DD),
+          side: BorderSide.none,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: _loggingOut
+            ? const SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(
+            color: AppTheme.primary,
+            strokeWidth: 2,
+          ),
+        )
+            : Text(
+          'home.signout'.tr(),
+          style: const TextStyle(
+            fontSize: 16,
+            color: AppTheme.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  //  LOGOUT CONFIRMATION
+  // ---------------------------------------------------------------------------
   void _showLogoutDialog(BuildContext context) {
     final vm = context.read<AuthViewModel>();
     showDialog(
@@ -267,20 +303,21 @@ class _HomeViewState extends State<HomeView> {
               child: Text(
                 'cancel'.tr(),
                 style: const TextStyle(
-                    color: Colors.grey, fontWeight: FontWeight.w600),
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.pop(context); // Close dialog
+                Navigator.pop(context);
                 setState(() => _loggingOut = true);
 
-                await vm.logout(); // clear token, storage, etc.
+                await vm.logout();
 
                 if (!mounted) return;
                 setState(() => _loggingOut = false);
 
-                // redirect to login
                 Navigator.pushNamedAndRemoveUntil(
                     context, AppRoutes.login, (r) => false);
               },
@@ -293,7 +330,9 @@ class _HomeViewState extends State<HomeView> {
               child: Text(
                 'ok'.tr(),
                 style: const TextStyle(
-                    fontWeight: FontWeight.w700, color: Colors.white),
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
@@ -303,7 +342,9 @@ class _HomeViewState extends State<HomeView> {
   }
 }
 
-/// Reusable home grid button
+/// ---------------------------------------------------------------------------
+///  REUSABLE HOME GRID BUTTON
+/// ---------------------------------------------------------------------------
 class _HomeButton extends StatelessWidget {
   final IconData icon;
   final String label;

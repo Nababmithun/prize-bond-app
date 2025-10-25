@@ -26,6 +26,7 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
       body: Stack(
         children: [
+          /// Gradient background
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -36,6 +37,7 @@ class _LoginViewState extends State<LoginView> {
             ),
           ),
 
+          /// Main body
           SafeArea(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(
@@ -45,6 +47,7 @@ class _LoginViewState extends State<LoginView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  ///Language Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -53,19 +56,26 @@ class _LoginViewState extends State<LoginView> {
                       _langButton(context, 'bn', 'assets/icons/flag_bd.png', 'বাংলা'),
                     ],
                   ),
+
                   const SizedBox(height: 50),
 
+                  /// Logo
                   Image.asset('assets/icons/logo.png', width: 90, height: 90),
                   const SizedBox(height: 24),
 
-                  Text(tr('login.title'),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      )),
+                  /// Title
+                  Text(
+                    tr('login.title'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+
                   const SizedBox(height: 24),
 
+                  /// Email Field
                   TextField(
                     controller: email,
                     keyboardType: TextInputType.emailAddress,
@@ -79,8 +89,10 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 14),
 
+                  /// Password Field
                   TextField(
                     controller: pass,
                     obscureText: _obscure,
@@ -102,18 +114,19 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 12),
 
+                  /// Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.forgotEmail);
-                      },
+                      onPressed: () => Navigator.pushNamed(context, AppRoutes.forgotEmail),
                       child: Text(tr('login.forgot')),
                     ),
                   ),
 
+                  /// Login Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -129,9 +142,7 @@ class _LoginViewState extends State<LoginView> {
                           Navigator.pushReplacementNamed(context, AppRoutes.home);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(vm.error ?? tr('common.retry')),
-                            ),
+                            SnackBar(content: Text(vm.error ?? tr('common.retry'))),
                           );
                         }
                       },
@@ -153,8 +164,10 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 14),
 
+                  /// Divider (Continue With)
                   Row(
                     children: [
                       Expanded(child: Divider(color: cs.outlineVariant)),
@@ -168,8 +181,10 @@ class _LoginViewState extends State<LoginView> {
                       Expanded(child: Divider(color: cs.outlineVariant)),
                     ],
                   ),
+
                   const SizedBox(height: 14),
 
+                  /// Google Login (Placeholder)
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -184,13 +199,14 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 16),
 
+                  /// Sign Up Button
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, AppRoutes.signup),
+                      onPressed: () => Navigator.pushNamed(context, AppRoutes.signup),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         backgroundColor: cs.surfaceContainerHighest.withOpacity(.35),
@@ -198,11 +214,16 @@ class _LoginViewState extends State<LoginView> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(tr('login.signup'),
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      child: Text(
+                        tr('login.signup'),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
+
                   const SizedBox(height: 20),
+
+                  /// Footer
                   _footer(context),
                 ],
               ),
@@ -213,6 +234,9 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Language Toggle Button
+  // ---------------------------------------------------------------------------
   Widget _langButton(BuildContext context, String code, String asset, String label) {
     final active = context.locale.languageCode == code;
     return GestureDetector(
@@ -244,6 +268,9 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Footer Section
+  // ---------------------------------------------------------------------------
   Widget _footer(BuildContext context) => Column(
     children: [
       Wrap(

@@ -1,26 +1,46 @@
+/// Central place to keep all backend endpoint paths used by the app.
+/// These are **relative paths**; the base URL is configured in [ApiClient].
+///
+/// Usage:
+/// ```dart
+/// final res = await ApiClient.dio.post(Endpoints.login, data: {...});
+/// ```
 class Endpoints {
+  Endpoints._(); // No instance
 
-  //Login  / Register / Verify-Otp
-  // POST
+  // ---------------------------
+  // Auth: Login / Register / Verify OTP
+  // ---------------------------
+
+  /// POST: Customer login
   static const String login = 'customer/login';
-  // POST
+
+  /// POST: Customer registration (returns OTP send status)
   static const String register = 'customer/registration';
-  // POST
+
+  /// POST: Verify registration OTP
   static const String verifyOtp = 'customer/verify-otp';
 
-  // Forgot / Reset password
-  // POST
+  // ---------------------------
+  // Password: Forgot / Reset
+  // ---------------------------
+
+  /// POST: Send forgot-password OTP to email/phone
   static const String forgotPassword = 'customer/forgot-password';
-  // POST
+
+  /// POST: Reset password using email + OTP + new_password
   static const String resetPassword = 'customer/reset-password';
 
-  // Add New Bond
-  // GET
+  // ---------------------------
+  // Prize Bond: Series & Store
+  // ---------------------------
+
+  /// GET: Fetch prize bond series list (for dropdown)
   static const String bondSeriesList = 'bond-series/list';
-  // GET
+
+  /// POST: Create/store a single prize bond
   static const String prizeBondStore = 'prize-bond/store';
-  // POST
+
+  /// POST: Bulk create/store multiple prize bonds
   static const String prizeBondBulkStore = 'prize-bond/bulk-store';
-
-
 }

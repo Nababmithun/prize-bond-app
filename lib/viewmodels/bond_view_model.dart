@@ -1,36 +1,50 @@
 import 'package:flutter/foundation.dart';
 import '../data/repositories/bond_repository.dart';
 
+/// ViewModel Layer for managing Prize Bond related operations.
+///
+/// Handles:
+/// - Fetching Series list (for dropdown)
+/// - Selecting series
+/// - Submitting single bond
+/// - Submitting multiple bonds
+///
+/// Uses [BondRepository] for all API calls.
+/// Keeps [_loading], [_series], [message] to update UI via [ChangeNotifier].
 class BondViewModel extends ChangeNotifier {
   final BondRepository _repo;
 
   BondViewModel(this._repo);
 
-  //Loading
-  bool _loading = false;
+  // ---------------------------------------------------------------------------
+  // State Variables
+  // ---------------------------------------------------------------------------
 
+  bool _loading = false;
   bool get isLoading => _loading;
 
-  //List
   List<Map<String, dynamic>> _series = [];
-
   List<Map<String, dynamic>> get series => _series;
 
-  //Var
   String? selectedSeriesId;
   String? selectedSeriesCode;
   String? message;
 
-  //List of Series
+  // ---------------------------------------------------------------------------
+  // Fetch Series List
+  // ---------------------------------------------------------------------------
+
+  /// Loads all prize bond series for dropdown list.
   Future<void> loadSeries() async {
     _loading = true;
     notifyListeners();
 
     final res = await _repo.fetchSeries();
-
     _loading = false;
+
     if (res['ok'] == true) {
       _series = List<Map<String, dynamic>>.from(res['series']);
+      message = null;
     } else {
       _series = [];
       message = res['message'];
@@ -38,13 +52,28 @@ class BondViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ---------------------------------------------------------------------------
+  // Set Selected Series
+  // ---------------------------------------------------------------------------
+
+  /// Sets currently selected series [id] and [code].
   void setSelectedSeries(String id, String code) {
     selectedSeriesId = id;
     selectedSeriesCode = code;
     notifyListeners();
   }
 
-  //Single bond
+  // ---------------------------------------------------------------------------
+  // Submit Single Bond
+  // ---------------------------------------------------------------------------
+
+  /// Submits a single bond to the API.
+  ///
+  /// Requires:
+  /// - [price]
+  /// - [code]
+  ///
+  /// Returns `true` if success, else `false`.
   Future<bool> submitSingle({
     required String price,
     required String code,
@@ -54,6 +83,7 @@ class BondViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+
     _loading = true;
     notifyListeners();
 
@@ -69,7 +99,18 @@ class BondViewModel extends ChangeNotifier {
     return res['ok'] == true;
   }
 
-  //Multi bond
+  // ---------------------------------------------------------------------------
+  // Submit Bulk Bonds
+  // ---------------------------------------------------------------------------
+
+  /// Submits multiple prize bonds in bulk.
+  ///
+  /// Requires:
+  /// - [price]
+  /// - [startPrizeBondNumber]
+  /// - [totalBond]
+  ///
+  /// Returns `true` if success, else `false`.
   Future<bool> submitBulk({
     required String price,
     required String startPrizeBondNumber,
@@ -80,6 +121,7 @@ class BondViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+
     _loading = true;
     notifyListeners();
 
