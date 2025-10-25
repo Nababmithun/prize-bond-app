@@ -1,42 +1,69 @@
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    // Use the official Kotlin Android plugin id for KTS:
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
     namespace = "tss.com.bond_notifier_app"
+
+    // Let Flutter manage these SDK versions
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
+    // Use Java 17 with recent AGP/Flutter (recommended)
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = "17"
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "tss.com.bond_notifier_app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
+
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // If you hit 65K method refs in the future, uncomment:
+        // multiDexEnabled = true
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // TODO: replace with your real release signing config when ready.
+            // Using debug keystore so that `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+
+            // Typical proguard setup if you add minify later:
+            // isMinifyEnabled = true
+            // proguardFiles(
+            //     getDefaultProguardFile("proguard-android-optimize.txt"),
+            //     "proguard-rules.pro"
+            // )
+        }
+        debug {
+            // debug-specific options if needed
         }
     }
+
+    // Optional: if you face META-INF conflicts later, you can use:
+    // packaging {
+    //     resources {
+    //         excludes += setOf(
+    //             "META-INF/DEPENDENCIES",
+    //             "META-INF/INDEX.LIST",
+    //             "META-INF/*.kotlin_module"
+    //         )
+    //     }
+    // }
 }
 
 flutter {

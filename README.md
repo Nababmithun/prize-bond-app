@@ -133,3 +133,90 @@ flutter pub run easy_localization:generate -S assets/translations -f json -o loc
 
 Step 3. Run App
 flutter run
+
+
+Step-1: টার্মিনাল খুলে JKS ফাইল তৈরি করো
+
+Windows / macOS / Linux সব জায়গায় একই কমান্ড কাজ করে:
+keytool -genkey -v -keystore ~/bond_notifier_keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias bondnotifier
+
+ব্যাখ্যা:
+~/bond_notifier_keystore.jks → তোমার keystore ফাইল কোথায় সংরক্ষণ হবে (তুমি চাইলে অন্য জায়গাও দিতে পারো)
+-alias bondnotifier → key alias (এইটা তোমার সাইনিং কনফিগে ব্যবহার হবে)
+-validity 10000 → ১০,০০০ দিন (প্রায় ২৭ বছর) পর্যন্ত বৈধ থাকবে
+
+💡 কমান্ড দিলে এটি তোমাকে নিচের মতো ইনফো চাইবে:
+
+Enter keystore password: ********
+Re-enter new password: ********
+What is your first and last name?  [Unknown]: Md Mahadi Hasan
+What is the name of your organizational unit?  [Unknown]: TSS
+What is the name of your organization?  [Unknown]: TSS Technologies
+What is the name of your City or Locality?  [Unknown]: Dhaka
+What is the name of your State or Province?  [Unknown]: Dhaka
+What is the two-letter country code for this unit?  [Unknown]: BD
+Is CN=Md Mahadi Hasan, OU=TSS, O=TSS Technologies, L=Dhaka, ST=Dhaka, C=BD correct?  [no]: yes
+
+শেষে এটা bond_notifier_keystore.jks ফাইল তৈরি করবে।
+
+🧩 Step-2: Keystore ফাইলটি প্রজেক্টে রাখো
+ Flutter প্রজেক্টের android/app/ ফোল্ডারে .jks ফাইলটি কপি করো:
+
+android/
+└── app/
+├── build.gradle.kts
+├── google-services.json
+├── bond_notifier_keystore.jks  ✅
+
+🧩 Step-3: key.properties ফাইল তৈরি করো
+android/ ফোল্ডারে একটি নতুন ফাইল তৈরি করো key.properties নামে:
+
+storePassword=your_keystore_password
+keyPassword=your_key_password
+keyAlias=bondnotifier
+storeFile=app/bond_notifier_keystore.jks
+
+🧩 Step-4: android/app/build.gradle.kts-এ সাইনিং কনফিগ যোগ করো
+ build.gradle.kts ফাইলে নিচের অংশ যোগ করো (defaultConfig এর উপরে, buildTypes এর নিচে নয়):
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = java.util.Properties()
+if (keystorePropertiesFile.exists()) {
+keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))
+}
+
+android {
+...
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}
+
+🧩 Step-5: রিলিজ APK বানাও
+
+টার্মিনালে নিচের কমান্ড চালাও:
+
+flutter clean
+flutter pub get
+flutter build apk --release
+
+
+➡ তোমার রিলিজ ফাইল থাকবে:
+build/app/outputs/flutter-apk/app-release.apk
+
+🧩 Step-6 (Optional): AppBundle (.aab) বানাতে
+Google Play Store-এর জন্য .aab দরকার হয়:
+flutter build appbundle --release
