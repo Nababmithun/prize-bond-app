@@ -13,9 +13,6 @@ class AuthViewModel extends ChangeNotifier {
   bool get isLoading => _loading;
   String? get error => _error;
 
-  // -----------------------------------
-  // Try auto-attach saved token
-  // -----------------------------------
   Future<bool> tryAutoAttachToken() async {
     final token = await TokenStorage.getToken();
     if (token != null && token.isNotEmpty) {
@@ -25,12 +22,8 @@ class AuthViewModel extends ChangeNotifier {
     return false;
   }
 
-  // Check local login status
   Future<bool> isLoggedIn() => TokenStorage.isLoggedIn();
 
-  // -----------------------------------
-  // LOGIN
-  // -----------------------------------
   Future<bool> login(String email, String password) async {
     _setLoading(true);
     final res = await _repo.login(email: email, password: password);
@@ -38,7 +31,6 @@ class AuthViewModel extends ChangeNotifier {
 
     final ok = res['ok'] == true;
     _error = ok ? null : res['message'];
-
     if (ok) {
       await _repo.persistLogin(token: res['token'], email: email);
     }
@@ -46,9 +38,6 @@ class AuthViewModel extends ChangeNotifier {
     return ok;
   }
 
-  // -----------------------------------
-  // REGISTER
-  // -----------------------------------
   Future<bool> register({
     required String name,
     required String phone,
@@ -76,11 +65,8 @@ class AuthViewModel extends ChangeNotifier {
     return ok;
   }
 
-  // -----------------------------------
-  // VERIFY OTP
-  // -----------------------------------
-  Future<bool> verifyOtp(String otp) async {
-    final email = await TokenStorage.getPendingEmail() ?? '';
+  Future<bool> verifyOtp(String otp, {String? emailArg}) async {
+    final email = emailArg ?? (await TokenStorage.getPendingEmail()) ?? '';
     if (email.isEmpty) {
       _error = 'No pending email';
       notifyListeners();
@@ -96,24 +82,49 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     if (ok) {
-      await _repo.persistLogin(token: null, email: email);
+      await TokenStorage.clearPendingEmail();
     }
     return ok;
   }
 
-  // -----------------------------------
-  // LOGOUT
-  // -----------------------------------
+
+  Future<bool> forgotPassword(String email) async {
+    _setLoading(true);
+    final res = await _repo.forgotPassword(email: email);
+    _setLoading(false);
+    final ok = res['ok'] == true;
+    _error = ok ? null : res['message'];
+    notifyListeners();
+    return ok;
+  }
+
+  Future<bool> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    _setLoading(true);
+    final res = await _repo.resetPassword(
+      email: email,
+      otp: otp,
+      newPassword: newPassword,
+    );
+    _setLoading(false);
+    final ok = res['ok'] == true;
+    _error = ok ? null : res['message'];
+    notifyListeners();
+    return ok;
+  }
+
+
+
   Future<void> logout() async {
     await _repo.logout();
     notifyListeners();
   }
 
-  // -----------------------------------
-  // Private helper
-  // -----------------------------------
-  void _setLoading(bool value) {
-    _loading = value;
+  void _setLoading(bool v) {
+    _loading = v;
     notifyListeners();
   }
 }

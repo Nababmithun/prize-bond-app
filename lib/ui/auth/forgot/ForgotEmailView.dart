@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_routes.dart';
+import '../../../viewmodels/auth_view_model.dart';
 
 class ForgotEmailView extends StatefulWidget {
   const ForgotEmailView({super.key});
@@ -12,16 +14,17 @@ class ForgotEmailView extends StatefulWidget {
 
 class _ForgotEmailViewState extends State<ForgotEmailView> {
   final email = TextEditingController();
+  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final size = MediaQuery.of(context).size;
+    final vm = context.watch<AuthViewModel>();
 
     return Scaffold(
       body: Stack(
         children: [
-          // Background
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -31,7 +34,6 @@ class _ForgotEmailViewState extends State<ForgotEmailView> {
               ),
             ),
           ),
-
           SafeArea(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(
@@ -39,98 +41,101 @@ class _ForgotEmailViewState extends State<ForgotEmailView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 60),
+                  Image.asset('assets/icons/logo.png', width: 90, height: 90),
+                  const SizedBox(height: 30),
 
-                  // Logo
-                  Image.asset(
-                    'assets/icons/logo.png',
-                    width: 90,
-                    height: 90,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Title
                   Text(
-                    tr('forgot.title').isNotEmpty
-                        ? tr('forgot.title')
-                        : 'Forgot Password?',
-                    textAlign: TextAlign.center,
+                    'Forgot Password?',
                     style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87),
+                        fontSize: 20, fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: 12),
-
-                  //Subtitle
+                  const SizedBox(height: 10),
                   Text(
-                    tr('forgot.subtitle').isNotEmpty
-                        ? tr('forgot.subtitle')
-                        : 'Enter your registered email to receive a reset code.',
+                    'Enter your registered email to receive a reset code.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 14,
-                      color: cs.onSurface.withOpacity(.7),
-                    ),
+                        fontSize: 14, color: cs.onSurface.withOpacity(.7)),
                   ),
                   const SizedBox(height: 40),
 
-                  // Email Input
                   TextField(
                     controller: email,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      hintText: tr('login.email'),
+                      hintText: 'Email Address',
                       prefixIcon:
                       const Icon(Icons.email_outlined, color: Colors.grey),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                        const BorderSide(color: Color(0xFFCBD5C0), width: 1),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 14),
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                   const SizedBox(height: 28),
 
-                  // Send OTP button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.resetPassword);
+                      onPressed: _loading
+                          ? null
+                          : () async {
+                        final emailVal = email.text.trim();
+                        if (emailVal.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                  Text('Please enter your email')));
+                          return;
+                        }
+                        setState(() => _loading = true);
+                        final ok =
+                        await vm.forgotPassword(emailVal);
+                        setState(() => _loading = false);
+                        if (!mounted) return;
+                        if (ok) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(vm.error ??
+                                  'Verification code sent to your email'),
+                            ),
+                          );
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.resetPassword,
+                            arguments: emailVal,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(vm.error ??
+                                  'Failed to send verification code'),
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                            borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: Text(
-                        tr('forgot.send').isNotEmpty
-                            ? tr('forgot.send')
-                            : 'Send Code',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, color: Colors.white),
+                      child: _loading
+                          ? const CircularProgressIndicator(
+                          color: Colors.white)
+                          : const Text(
+                        'Send Code',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white),
                       ),
                     ),
                   ),
                   const SizedBox(height: 40),
-
-                  // 📎 Footer
-                  Text(
-                    '© 2025, Prize bond checker',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: cs.onSurface.withOpacity(.55),
-                    ),
-                  ),
+                  Text('© 2025, Prize bond checker',
+                      style: TextStyle(
+                          fontSize: 12.5,
+                          color: cs.onSurface.withOpacity(.55))),
                 ],
               ),
             ),

@@ -2,11 +2,16 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_routes.dart';
 import 'core/utils/internet_checker.dart';
+
 import 'data/repositories/auth_repository.dart';
+import 'data/repositories/bond_repository.dart';
 import 'viewmodels/auth_view_model.dart';
+import 'viewmodels/bond_view_model.dart';
+import 'viewmodels/settings_view_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,13 +35,16 @@ class BondNotifierApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthViewModel(AuthRepository())),
+        ChangeNotifierProvider(create: (_) => SettingsViewModel()),
+        Provider(create: (_) => AuthRepository()),
+        Provider(create: (_) => BondRepository()),
+        ChangeNotifierProvider(create: (c) => AuthViewModel(c.read<AuthRepository>())),
+        ChangeNotifierProvider(create: (c) => BondViewModel(c.read<BondRepository>())),
       ],
       child: Builder(
         builder: (context) {
-          // Internet connectivity checker after UI ready
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Future.delayed(const Duration(milliseconds: 500), () {
+            Future.delayed(const Duration(milliseconds: 400), () {
               InternetChecker.startListening(context);
             });
           });

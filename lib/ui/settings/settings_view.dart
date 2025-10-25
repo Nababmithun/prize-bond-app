@@ -1,10 +1,19 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_routes.dart';
+import '../../viewmodels/auth_view_model.dart';
 
-class SettingsView extends StatelessWidget {
+class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
+
+  @override
+  State<SettingsView> createState() => _SettingsViewState();
+}
+
+class _SettingsViewState extends State<SettingsView> {
+  bool _loggingOut = false;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +37,7 @@ class SettingsView extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               children: [
-                // Header card (rounded like screenshot)
+                // Header card
                 Container(
                   padding: const EdgeInsets.fromLTRB(4, 4, 12, 14),
                   decoration: BoxDecoration(
@@ -46,7 +55,8 @@ class SettingsView extends StatelessWidget {
                     children: [
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 20),
                         color: AppTheme.primary,
                       ),
                       const SizedBox(width: 4),
@@ -65,7 +75,7 @@ class SettingsView extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // ⚙️ Settings group card
+                // ⚙️ Settings group
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -101,21 +111,18 @@ class SettingsView extends StatelessWidget {
                         onTap: () => Navigator.pushNamed(
                             context, AppRoutes.editProfile),
                       ),
-
                       _SettingsTile(
                         title: tr('settings.change_password'),
                         icon: Icons.chevron_right_rounded,
                         onTap: () => Navigator.pushNamed(
                             context, AppRoutes.changePassword),
                       ),
-
                       _SettingsTile(
                         title: tr('settings.change_language'),
                         icon: Icons.chevron_right_rounded,
                         onTap: () => Navigator.pushNamed(
                             context, AppRoutes.changeLanguage),
                       ),
-
                       _SettingsTile(
                         title: tr('settings.referral'),
                         icon: Icons.add,
@@ -128,11 +135,12 @@ class SettingsView extends StatelessWidget {
 
                 const SizedBox(height: 50),
 
-                // Sign Out Button
+                // 🚪 Dynamic Sign Out Button
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => _showLogoutDialog(context),
+                    onPressed:
+                    _loggingOut ? null : () => _showLogoutDialog(context),
                     style: OutlinedButton.styleFrom(
                       backgroundColor: const Color(0xFFDDF5DD),
                       side: BorderSide.none,
@@ -141,11 +149,20 @@ class SettingsView extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: Text(
+                    child: _loggingOut
+                        ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        color: AppTheme.primary,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : Text(
                       tr('settings.signout').isNotEmpty
                           ? tr('settings.signout')
                           : 'Sign out',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         color: AppTheme.primary,
                         fontWeight: FontWeight.bold,
@@ -161,8 +178,9 @@ class SettingsView extends StatelessWidget {
     );
   }
 
-  //Logout confirmation dialog
+  // 🔐 Dynamic logout dialog using AuthViewModel
   void _showLogoutDialog(BuildContext context) {
+    final vm = context.read<AuthViewModel>();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -172,24 +190,37 @@ class SettingsView extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         content: const Text("Are you sure you want to sign out?"),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        actionsPadding:
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx), // ❌ Cancel
-            child: const Text("Cancel",
-                style: TextStyle(fontWeight: FontWeight.w600)),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              "Cancel",
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            onPressed: () {
-              Navigator.pop(ctx); // Close dialog
-              Navigator.pushReplacementNamed(context, AppRoutes.login);
+            onPressed: () async {
+              Navigator.pop(ctx); // close dialog
+              setState(() => _loggingOut = true);
+
+              await vm.logout(); // clears token, prefs, etc.
+
+              if (!mounted) return;
+              setState(() => _loggingOut = false);
+
+              // Redirect to Login
+              Navigator.pushNamedAndRemoveUntil(
+                  context, AppRoutes.login, (route) => false);
             },
             child: const Text(
               "OK",
@@ -205,7 +236,7 @@ class SettingsView extends StatelessWidget {
   }
 }
 
-// Settings list tile widget
+// 📄 Reusable settings tile
 class _SettingsTile extends StatelessWidget {
   final String title;
   final IconData icon;

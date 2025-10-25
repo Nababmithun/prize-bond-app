@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_routes.dart';
+import '../../viewmodels/auth_view_model.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -11,6 +13,8 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+  bool _loggingOut = false;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -105,8 +109,8 @@ class _HomeViewState extends State<HomeView> {
                       IconButton(
                         icon: const Icon(Icons.notifications_outlined,
                             color: AppTheme.primary),
-                        onPressed: () =>
-                            Navigator.pushNamed(context, AppRoutes.notifications),
+                        onPressed: () => Navigator.pushNamed(
+                            context, AppRoutes.notifications),
                       ),
                     ],
                   ),
@@ -201,7 +205,9 @@ class _HomeViewState extends State<HomeView> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => _showLogoutDialog(context),
+                    onPressed: _loggingOut
+                        ? null
+                        : () => _showLogoutDialog(context),
                     style: OutlinedButton.styleFrom(
                       backgroundColor: const Color(0xFFDDF5DD),
                       side: BorderSide.none,
@@ -210,7 +216,16 @@ class _HomeViewState extends State<HomeView> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: Text(
+                    child: _loggingOut
+                        ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: AppTheme.primary,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : Text(
                       'home.signout'.tr(),
                       style: const TextStyle(
                         fontSize: 16,
@@ -228,49 +243,67 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  ///Logout Confirmation Dialog
+  /// Logout Confirmation Dialog
   void _showLogoutDialog(BuildContext context) {
+    final vm = context.read<AuthViewModel>();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.logout, color: AppTheme.primary),
-            const SizedBox(width: 8),
-            Text('home.logout_title'.tr()),
-          ],
-        ),
-        content: Text('home.logout_message'.tr()),
-        actionsPadding: const EdgeInsets.only(bottom: 8, right: 8),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('cancel'.tr(),
-                style: const TextStyle(
-                    color: Colors.grey, fontWeight: FontWeight.w600)),
+      builder: (context) {
+        return AlertDialog(
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.logout, color: AppTheme.primary),
+              const SizedBox(width: 8),
+              Text('home.logout_title'.tr()),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, AppRoutes.login);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          content: Text('home.logout_message'.tr()),
+          actionsPadding: const EdgeInsets.only(bottom: 8, right: 8),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'cancel'.tr(),
+                style: const TextStyle(
+                    color: Colors.grey, fontWeight: FontWeight.w600),
               ),
             ),
-            child: Text('ok'.tr(),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context); // Close dialog
+                setState(() => _loggingOut = true);
+
+                await vm.logout(); // clear token, storage, etc.
+
+                if (!mounted) return;
+                setState(() => _loggingOut = false);
+
+                // redirect to login
+                Navigator.pushNamedAndRemoveUntil(
+                    context, AppRoutes.login, (r) => false);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'ok'.tr(),
                 style: const TextStyle(
-                    fontWeight: FontWeight.w700, color: Colors.white)),
-          ),
-        ],
-      ),
+                    fontWeight: FontWeight.w700, color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
+/// Reusable home grid button
 class _HomeButton extends StatelessWidget {
   final IconData icon;
   final String label;

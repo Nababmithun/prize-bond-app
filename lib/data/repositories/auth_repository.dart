@@ -3,18 +3,9 @@ import '../../core/network/api_client.dart';
 import '../../core/network/endpoints.dart';
 import '../../core/storage/token_storage.dart';
 
-/// 🔐 Handles all authentication API requests:
-/// - Login
-/// - Register (with password + confirmation)
-/// - Verify OTP
-/// - Logout
-/// - Persist user session
 class AuthRepository {
   final Dio _dio = ApiClient.dio;
 
-  // -------------------------
-  // LOGIN
-  // -------------------------
   Future<Map<String, dynamic>> login({
     required String email,
     required String password,
@@ -22,40 +13,36 @@ class AuthRepository {
     try {
       final res = await _dio.post(
         Endpoints.login,
-        data: {'email': email, 'password': password},
+        data: FormData.fromMap({
+          'email': email,
+          'password': password,
+        }),
       );
 
-      if (res.statusCode == 200 && res.data['status'] == 'success') {
-        final token = res.data['token'] ?? res.data['payload']?['token'];
+      final data = res.data;
+      final ok = (data is Map) && data['success'] == true;
+      if (ok) {
+        // token sits at data.user.token (from your screenshot)
+        final token = data['data']?['user']?['token']?.toString();
+        if (token == null || token.isEmpty) {
+          return {'ok': false, 'message': 'Token missing in response'};
+        }
         return {'ok': true, 'message': null, 'token': token};
       }
-
       return {
         'ok': false,
-        'message': res.data['message']?.toString() ?? 'Login failed',
-        'token': null,
+        'message': data is Map ? (data['message']?.toString() ?? 'Login failed') : 'Login failed',
       };
     } on DioException catch (e) {
       final msg = e.response?.data is Map
           ? e.response?.data['message']?.toString()
           : e.message;
-      return {
-        'ok': false,
-        'message': msg ?? 'Network error during login',
-        'token': null,
-      };
-    } catch (e) {
-      return {
-        'ok': false,
-        'message': 'Unexpected error during login',
-        'token': null,
-      };
+      return {'ok': false, 'message': msg ?? 'Network error during login'};
+    } catch (_) {
+      return {'ok': false, 'message': 'Unexpected error during login'};
     }
   }
 
-  // -------------------------
-  // REGISTER (now with password + confirmation)
-  // -------------------------
   Future<Map<String, dynamic>> register({
     required String name,
     required String phone,
@@ -68,83 +55,139 @@ class AuthRepository {
     try {
       final res = await _dio.post(
         Endpoints.register,
-        data: {
+        data: FormData.fromMap({
           'name': name,
           'email': email,
           'phone': phone,
           'password': password,
-          'password_confirmation': confirmPassword,
+          'confirm_password': confirmPassword, // exact key
           'nid': nid ?? '',
-          'referred_by': referral ?? '',
-        },
+          'referral_code': referral ?? '',     // exact key from screenshot
+        }),
       );
 
-      if (res.statusCode == 200 && res.data['status'] == 'success') {
+      final data = res.data;
+      final ok = (data is Map) && data['success'] == true;
+      if (ok) {
         await TokenStorage.savePendingEmail(email);
         return {'ok': true, 'message': null};
       }
-
       return {
         'ok': false,
-        'message': res.data['message']?.toString() ?? 'Registration failed',
+        'message': data is Map ? (data['message']?.toString() ?? 'Registration failed') : 'Registration failed',
       };
     } on DioException catch (e) {
       final msg = e.response?.data is Map
           ? e.response?.data['message']?.toString()
           : e.message;
       return {'ok': false, 'message': msg ?? 'Network error during registration'};
-    } catch (e) {
+    } catch (_) {
       return {'ok': false, 'message': 'Unexpected error during registration'};
     }
   }
 
-  // -------------------------
-  // VERIFY REGISTER OTP
-  // -------------------------
   Future<Map<String, dynamic>> verifyRegisterOtp({
     required String email,
     required String otp,
   }) async {
     try {
       final res = await _dio.post(
-        Endpoints.verifyRegisterOtp,
-        data: {'email': email, 'otp': otp},
+        Endpoints.verifyOtp,
+        data: FormData.fromMap({
+          'email': email,
+          'otp': otp,
+        }),
       );
 
-      if (res.statusCode == 200 && res.data['status'] == 'success') {
+      final data = res.data;
+      final ok = (data is Map) && data['success'] == true;
+      if (ok) {
         await TokenStorage.clearPendingEmail();
         return {'ok': true, 'message': null};
       }
-
       return {
         'ok': false,
-        'message': res.data['message']?.toString() ?? 'OTP verification failed',
+        'message': data is Map ? (data['message']?.toString() ?? 'OTP verification failed') : 'OTP verification failed',
       };
     } on DioException catch (e) {
       final msg = e.response?.data is Map
           ? e.response?.data['message']?.toString()
           : e.message;
       return {'ok': false, 'message': msg ?? 'Network error during OTP verification'};
-    } catch (e) {
+    } catch (_) {
       return {'ok': false, 'message': 'Unexpected error during OTP verification'};
     }
   }
 
-  // -------------------------
-  // SAVE TOKEN & EMAIL LOCALLY
-  // -------------------------
-  Future<void> persistLogin({String? token, required String email}) async {
-    if (token != null && token.isNotEmpty) {
-      await TokenStorage.saveToken(token);
-      ApiClient.setAuthToken(token);
-    }
+  Future<void> persistLogin({required String token, required String email}) async {
+    await TokenStorage.saveToken(token);
     await TokenStorage.saveEmail(email);
     await TokenStorage.setLoggedIn(true);
+    ApiClient.setAuthToken(token);
   }
 
-  // -------------------------
-  // LOGOUT
-  // -------------------------
+
+
+  Future<Map<String, dynamic>> forgotPassword({required String email}) async {
+    try {
+      final res = await _dio.post(
+        Endpoints.forgotPassword,
+        data: FormData.fromMap({'email': email}),
+      );
+
+      final data = res.data;
+      final ok = (data is Map) && data['success'] == true;
+      return {
+        'ok': ok,
+        'message': data is Map
+            ? (data['message']?.toString() ?? 'Failed to send code')
+            : 'Failed to send code',
+      };
+    } on DioException catch (e) {
+      final msg = e.response?.data is Map
+          ? e.response?.data['message']?.toString()
+          : e.message;
+      return {'ok': false, 'message': msg ?? 'Network error during forgot password'};
+    } catch (_) {
+      return {'ok': false, 'message': 'Unexpected error during forgot password'};
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    try {
+      final res = await _dio.post(
+        Endpoints.resetPassword,
+        data: FormData.fromMap({
+          'email': email,
+          'otp': otp,
+          'new_password': newPassword,
+        }),
+      );
+
+      final data = res.data;
+      final ok = (data is Map) && data['success'] == true;
+      return {
+        'ok': ok,
+        'message': data is Map
+            ? (data['message']?.toString() ?? 'Failed to reset password')
+            : 'Failed to reset password',
+      };
+    } on DioException catch (e) {
+      final msg = e.response?.data is Map
+          ? e.response?.data['message']?.toString()
+          : e.message;
+      return {'ok': false, 'message': msg ?? 'Network error during reset password'};
+    } catch (_) {
+      return {'ok': false, 'message': 'Unexpected error during reset password'};
+    }
+  }
+
+
+
   Future<void> logout() async {
     await TokenStorage.clearAll();
     ApiClient.setAuthToken(null);

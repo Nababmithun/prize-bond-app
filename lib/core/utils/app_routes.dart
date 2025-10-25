@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 import '../../ui/auth/forgot/ForgotEmailView.dart';
 import '../../ui/auth/forgot/ResetPasswordView.dart';
 import '../../ui/auth/login/login_view.dart';
@@ -24,7 +23,6 @@ import '../../ui/bonds/WinningResultView.dart';
 class AppRoutes {
   static final navKey = GlobalKey<NavigatorState>();
 
-  // All Routes
   static const splash = '/';
   static const login = '/login';
   static const signup = '/signup';
@@ -45,68 +43,31 @@ class AppRoutes {
   static const addBondSingle = '/addBondSingle';
   static const addBondMulti = '/addBondMulti';
 
-  //Route generator
   static Route<dynamic> onGenerate(RouteSettings s) {
     switch (s.name) {
-    //Splash
-      case splash:
-        return _r(const SplashView());
-
-    //Auth Routes
-      case login:
-        return _r(const LoginView());
-      case signup:
-        return _r(const SignupView());
-      case verify:
-        return _r(const VerifyView());
-      case forgotEmail:
-        return _r(const ForgotEmailView());
-      case resetPassword:
-        return _r(const ResetPasswordView());
-
-    //Home
-      case home:
-        return _r(const HomeView());
-      case subscription:
-        return _r(const SubscriptionView());
-      case notifications:
-        return _r(const NotificationsView());
-
-    //Profile & Settings
-      case profile:
-        return _r(const ProfileView());
-      case editProfile:
-        return _r(const EditProfileView());
-      case settings:
-        return _r(const SettingsView());
-      case changePassword:
-        return _r(const ChangePasswordView());
-      case changeLanguage:
-        return _r(const ChangeLanguageView());
-      case referral:
-        return _r(const ReferralCodeView());
-
-    //Bonds
-      case draw:
-        return _r(const DrawListView());
-      case drawResults:
-        return _r(const DrawDetailView());
-      case addBondSingle:
-        return _r(const AddBondView());
-      case addBondMulti:
-        return _r(const WinningResultView());
-
-    //Default fallback
-      default:
-        return _r(const Scaffold(
-          body: Center(
-            child: Text('Route not found'),
-          ),
-        ));
+      case splash: return _r(const SplashView());
+      case login: return _r(const LoginView());
+      case signup: return _r(const SignupView());
+      case verify: return _r(VerifyView(emailFromRouteArg: s.arguments as String?));
+      case forgotEmail: return _r(const ForgotEmailView());
+      case resetPassword: return _r(const ResetPasswordView());
+      case home: return _r(const HomeView());
+      case subscription: return _r(const SubscriptionView());
+      case notifications: return _r(const NotificationsView());
+      case profile: return _r(const ProfileView());
+      case editProfile: return _r(const EditProfileView());
+      case settings: return _r(const SettingsView());
+      case changePassword: return _r(const ChangePasswordView());
+      case changeLanguage: return _r(const ChangeLanguageView());
+      case referral: return _r(const ReferralCodeView());
+      case draw: return _r(const DrawListView());
+      case drawResults: return _r(const DrawDetailView());
+      case addBondSingle: return _r(const AddBondView());
+      case addBondMulti: return _r(const WinningResultView());
+      default: return _r(const Scaffold(body: Center(child: Text('Route not found'))));
     }
   }
 
-  // Helper Method
   static MaterialPageRoute _r(Widget child) =>
       MaterialPageRoute(builder: (_) => child);
 }
