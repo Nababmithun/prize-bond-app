@@ -3,29 +3,26 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+// THEME + ROUTES
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_routes.dart';
 import 'core/utils/internet_checker.dart';
 
+// REPOSITORIES
+import 'data/repositories/ProfileRepository.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/bond_repository.dart';
+
+// VIEWMODELS
+import 'data/viewmodels/ProfileViewModel.dart';
 import 'data/viewmodels/auth_view_model.dart';
 import 'data/viewmodels/bond_view_model.dart';
 import 'data/viewmodels/settings_view_model.dart';
 
-
-/// ----------------------------------------------------------------------------
-/// ENTRY POINT
-/// ----------------------------------------------------------------------------
-/// - Initializes EasyLocalization
-/// - Wraps runApp with runZonedGuarded for safe error capture (no behavior change)
-/// - Renders BondNotifierApp as the root widget
-/// ----------------------------------------------------------------------------
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  // (Optional but safe) — Crash-safe zone; doesn't change your app flow.
   runZonedGuarded(() {
     runApp(
       EasyLocalization(
@@ -37,19 +34,10 @@ Future<void> main() async {
       ),
     );
   }, (error, stack) {
-    // You can forward this to Crashlytics/Sentry later if you want.
-    // debugPrint('Uncaught zone error: $error');
+    debugPrint(' Uncaught zone error: $error');
   });
 }
 
-/// ----------------------------------------------------------------------------
-/// ROOT APP WIDGET
-/// ----------------------------------------------------------------------------
-/// - Provides all ViewModels & Repositories
-/// - Wires up localization & theme
-/// - Starts InternetChecker after first frame
-/// - Uses onGenerateRoute with initialRoute = Splash
-/// ----------------------------------------------------------------------------
 class BondNotifierApp extends StatelessWidget {
   const BondNotifierApp({super.key});
 
@@ -57,20 +45,20 @@ class BondNotifierApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // ViewModels / Repositories (DI)
+        //  Global State + Repositories
         ChangeNotifierProvider(create: (_) => SettingsViewModel()),
         Provider(create: (_) => AuthRepository()),
         Provider(create: (_) => BondRepository()),
-        ChangeNotifierProvider(
-          create: (c) => AuthViewModel(c.read<AuthRepository>()),
-        ),
-        ChangeNotifierProvider(
-          create: (c) => BondViewModel(c.read<BondRepository>()),
-        ),
+        Provider(create: (_) => ProfileRepository()),
+
+        //  ViewModels
+        ChangeNotifierProvider(create: (c) => AuthViewModel(c.read<AuthRepository>())),
+        ChangeNotifierProvider(create: (c) => BondViewModel(c.read<BondRepository>())),
+        ChangeNotifierProvider(create: (c) => ProfileViewModel(c.read<ProfileRepository>())),
       ],
       child: Builder(
         builder: (context) {
-          // Start listening to connectivity a tiny bit later so context is mounted.
+          // Internet check
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Future.delayed(const Duration(milliseconds: 400), () {
               InternetChecker.startListening(context);
@@ -81,16 +69,16 @@ class BondNotifierApp extends StatelessWidget {
             navigatorKey: AppRoutes.navKey,
             debugShowCheckedModeBanner: false,
 
-            // Localization
+            //  Localization
             title: tr('splash.app_name'),
             locale: context.locale,
             supportedLocales: context.supportedLocales,
             localizationsDelegates: context.localizationDelegates,
 
-            // Theme
+            //  Theme
             theme: AppTheme.light(),
 
-            // Navigation
+            //  Navigation
             onGenerateRoute: AppRoutes.onGenerate,
             initialRoute: AppRoutes.splash,
           );

@@ -2,7 +2,9 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../data/viewmodels/ProfileViewModel.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -12,11 +14,19 @@ class EditProfileView extends StatefulWidget {
 }
 
 class _EditProfileViewState extends State<EditProfileView> {
-  final _name = TextEditingController(text: "Pritom Basak");
-  final _phone = TextEditingController(text: "123456789");
-  final _email = TextEditingController(text: "abcd@email.com");
-  final _nid = TextEditingController(text: "123456789");
+  final _name = TextEditingController();
+  final _phone = TextEditingController();
+  final _email = TextEditingController();
+  final _nid = TextEditingController();
   File? _imageFile;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileViewModel>().loadProfile();
+    });
+  }
 
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -25,13 +35,20 @@ class _EditProfileViewState extends State<EditProfileView> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<ProfileViewModel>();
+    final user = vm.user;
     final cs = Theme.of(context).colorScheme;
-    final width = MediaQuery.of(context).size.width;
+
+    if (user != null && _name.text.isEmpty) {
+      _name.text = user['name'] ?? '';
+      _phone.text = user['phone'] ?? '';
+      _email.text = user['email'] ?? '';
+      _nid.text = user['nid'] ?? '';
+    }
 
     return Scaffold(
       body: Stack(
         children: [
-          // Background gradient
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -41,160 +58,57 @@ class _EditProfileViewState extends State<EditProfileView> {
               ),
             ),
           ),
-
           SafeArea(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.all(16),
               children: [
-                // Rounded header pill (back + title)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  margin: const EdgeInsets.only(right: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(.06),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-                        color: AppTheme.primary,
-                        padding: const EdgeInsets.only(left: 6, right: 2),
-                        constraints: const BoxConstraints(),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'edit_profile.title'.tr(), // Edit profile
+                // Header
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: AppTheme.primary),
+                    ),
+                    Text('edit_profile.title'.tr(),
                         style: const TextStyle(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                  ],
                 ),
                 const SizedBox(height: 14),
 
-                // Content card (same-to-same look)
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(.06),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: width * 0.045,
-                    vertical: 18,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                // Image picker
+                Center(
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      // profile image with overlay "Change profile"
-                      Center(
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircleAvatar(
-                              radius: 52,
-                              backgroundColor: Colors.grey.shade300,
-                              backgroundImage:
-                              _imageFile != null ? FileImage(_imageFile!) : null,
-                              child: _imageFile == null
-                                  ? const Icon(Icons.person, size: 48, color: Colors.white)
-                                  : null,
-                            ),
-                            Positioned.fill(
-                              child: Material(
-                                color: Colors.black.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(999),
-                                child: InkWell(
-                                  onTap: _pickImage,
-                                  borderRadius: BorderRadius.circular(999),
-                                  child: const Center(
-                                    child: Text(
-                                      'Change profile',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
+                      CircleAvatar(
+                        radius: 52,
+                        backgroundColor: Colors.grey.shade300,
+                        backgroundImage: _imageFile != null
+                            ? FileImage(_imageFile!)
+                            : (user?['image'] != null
+                            ? NetworkImage(
+                            "https://prize-bond-test.peopleplusbd.com/${user?['image']}")
+                            : null) as ImageProvider?,
+                        child: user?['image'] == null && _imageFile == null
+                            ? const Icon(Icons.person, size: 48, color: Colors.white)
+                            : null,
+                      ),
+                      Positioned.fill(
+                        child: Material(
+                          color: Colors.black.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(999),
+                          child: InkWell(
+                            onTap: _pickImage,
+                            child: const Center(
+                              child: Text(
+                                'Change profile',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-
-                      // Name
-                      _label(context, 'edit_profile.name'.tr()),
-                      _field(controller: _name, icon: Icons.person_outline),
-                      const SizedBox(height: 12),
-
-                      // Phone
-                      _label(context, 'edit_profile.phone'.tr()),
-                      _field(
-                        controller: _phone,
-                        icon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Email
-                      _label(context, 'edit_profile.email'.tr()),
-                      _field(
-                        controller: _email,
-                        icon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      const SizedBox(height: 12),
-
-                      // NID (Optional)
-                      _label(context, 'edit_profile.nid'.tr()),
-                      _field(controller: _nid, icon: Icons.credit_card),
-                      const SizedBox(height: 18),
-
-                      // Update button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Profile updated successfully!'),
-                                backgroundColor: AppTheme.primary,
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'edit_profile.update'.tr(),
-                            style: const TextStyle(
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -202,8 +116,73 @@ class _EditProfileViewState extends State<EditProfileView> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 18),
+
+                // Name
+                _field(_name, Icons.person_outline, 'edit_profile.name'.tr()),
+                const SizedBox(height: 12),
+
+                // Phone
+                _field(_phone, Icons.phone_outlined, 'edit_profile.phone'.tr(),
+                    type: TextInputType.phone),
+                const SizedBox(height: 12),
+
+                // Email (readonly)
+                TextField(
+                  controller: _email,
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    labelText: 'edit_profile.email'.tr(),
+                    filled: true,
+                    fillColor: const Color(0xFFE6F2E6),
+                    prefixIcon: const Icon(Icons.email_outlined,
+                        color: AppTheme.primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // NID
+                _field(_nid, Icons.credit_card, 'edit_profile.nid'.tr()),
+                const SizedBox(height: 20),
+
+                // Submit
+                ElevatedButton(
+                  onPressed: vm.isLoading
+                      ? null
+                      : () async {
+                    final ok = await vm.updateProfile(
+                      name: _name.text.trim(),
+                      phone: _phone.text.trim(),
+                      nid: _nid.text.trim(),
+                      image: _imageFile,
+                    );
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(vm.message ??
+                          (ok
+                              ? 'Profile updated successfully!'
+                              : 'Failed to update profile')),
+                      backgroundColor:
+                      ok ? AppTheme.primary : Colors.redAccent,
+                    ));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: vm.isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text('edit_profile.update'.tr(),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700)),
+                ),
               ],
             ),
           ),
@@ -212,41 +191,19 @@ class _EditProfileViewState extends State<EditProfileView> {
     );
   }
 
-  // small label above fields
-  Widget _label(BuildContext context, String text) => Padding(
-    padding: const EdgeInsets.only(left: 4, bottom: 6),
-    child: Text(
-      text,
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(.85),
-      ),
-    ),
-  );
-
-  // pale green field
-  Widget _field({
-    required TextEditingController controller,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
+  Widget _field(TextEditingController ctrl, IconData icon, String label,
+      {TextInputType type = TextInputType.text}) {
     return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
+      controller: ctrl,
+      keyboardType: type,
       decoration: InputDecoration(
+        labelText: label,
         filled: true,
-        fillColor: const Color(0xFFE6F2E6), // pale green
-        hintStyle: const TextStyle(color: Color(0x99000000)),
+        fillColor: const Color(0xFFE6F2E6),
         prefixIcon: Icon(icon, color: AppTheme.primary),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        enabledBorder: OutlineInputBorder(
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.black.withOpacity(.08)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppTheme.primary, width: 1.6),
+          borderSide: BorderSide.none,
         ),
       ),
     );

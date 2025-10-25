@@ -43,4 +43,12 @@ class Endpoints {
 
   /// POST: Bulk create/store multiple prize bonds
   static const String prizeBondBulkStore = 'prize-bond/bulk-store';
+
+  // ---------------------------
+  // Profile
+  //---------------------------
+  static const String profileUpdate = 'profile/update';
+  static const String profileEdit = 'profile/edit';
+  // Prize Bond
+  static const String prizeBondList = "prize-bond/list";
 }
