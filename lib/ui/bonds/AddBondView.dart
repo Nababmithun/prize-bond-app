@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
-import '../../viewmodels/bond_view_model.dart';
+import '../../data/viewmodels/bond_view_model.dart';
 
 /// ---------------------------------------------------------------------------
 /// ADD BOND VIEW

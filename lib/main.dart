@@ -9,9 +9,10 @@ import 'core/utils/internet_checker.dart';
 
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/bond_repository.dart';
-import 'viewmodels/auth_view_model.dart';
-import 'viewmodels/bond_view_model.dart';
-import 'viewmodels/settings_view_model.dart';
+import 'data/viewmodels/auth_view_model.dart';
+import 'data/viewmodels/bond_view_model.dart';
+import 'data/viewmodels/settings_view_model.dart';
+
 
 /// ----------------------------------------------------------------------------
 /// ENTRY POINT

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import '../data/repositories/bond_repository.dart';
+
+import '../repositories/bond_repository.dart';
 
 /// ViewModel Layer for managing Prize Bond related operations.
 ///

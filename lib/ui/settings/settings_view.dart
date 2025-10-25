@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_routes.dart';
-import '../../viewmodels/auth_view_model.dart';
+import '../../data/viewmodels/auth_view_model.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -75,7 +75,7 @@ class _SettingsViewState extends State<SettingsView> {
                 ),
                 const SizedBox(height: 16),
 
-                // ⚙️ Settings group
+                // Settings group
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -135,7 +135,7 @@ class _SettingsViewState extends State<SettingsView> {
 
                 const SizedBox(height: 50),
 
-                // 🚪 Dynamic Sign Out Button
+                // Dynamic Sign Out Button
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
@@ -178,7 +178,7 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  // 🔐 Dynamic logout dialog using AuthViewModel
+  //  Dynamic logout dialog using AuthViewModel
   void _showLogoutDialog(BuildContext context) {
     final vm = context.read<AuthViewModel>();
     showDialog(
@@ -236,7 +236,7 @@ class _SettingsViewState extends State<SettingsView> {
   }
 }
 
-// 📄 Reusable settings tile
+// Reusable settings tile
 class _SettingsTile extends StatelessWidget {
   final String title;
   final IconData icon;

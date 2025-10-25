@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_routes.dart';
-import '../../viewmodels/auth_view_model.dart';
+import '../../data/viewmodels/auth_view_model.dart';
 
 /// ---------------------------------------------------------------------------
 /// HOME VIEW

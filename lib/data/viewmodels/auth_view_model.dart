@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
-import '../data/repositories/auth_repository.dart';
-import '../core/storage/token_storage.dart';
-import '../core/network/api_client.dart';
+
+import '../../core/network/api_client.dart';
+import '../../core/storage/token_storage.dart';
+import '../repositories/auth_repository.dart';
+
 
 /// ViewModel (Provider Layer) for Authentication.
 ///
