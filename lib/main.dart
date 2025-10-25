@@ -14,9 +14,11 @@ import 'data/repositories/auth_repository.dart';
 import 'data/repositories/bond_repository.dart';
 
 // VIEWMODELS
+import 'data/repositories/change_password_repository.dart';
 import 'data/viewmodels/ProfileViewModel.dart';
 import 'data/viewmodels/auth_view_model.dart';
 import 'data/viewmodels/bond_view_model.dart';
+import 'data/viewmodels/change_password_view_model.dart';
 import 'data/viewmodels/settings_view_model.dart';
 
 Future<void> main() async {
@@ -50,11 +52,13 @@ class BondNotifierApp extends StatelessWidget {
         Provider(create: (_) => AuthRepository()),
         Provider(create: (_) => BondRepository()),
         Provider(create: (_) => ProfileRepository()),
+        Provider(create: (_) => ChangePasswordRepository()),
 
         //  ViewModels
         ChangeNotifierProvider(create: (c) => AuthViewModel(c.read<AuthRepository>())),
         ChangeNotifierProvider(create: (c) => BondViewModel(c.read<BondRepository>())),
         ChangeNotifierProvider(create: (c) => ProfileViewModel(c.read<ProfileRepository>())),
+        ChangeNotifierProvider(create: (c) => ChangePasswordViewModel(c.read<ChangePasswordRepository>())),
       ],
       child: Builder(
         builder: (context) {

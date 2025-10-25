@@ -51,4 +51,10 @@ class Endpoints {
   static const String profileEdit = 'profile/edit';
   // Prize Bond
   static const String prizeBondList = "prize-bond/list";
+
+  // ---------------------------
+  // Password: Change Password
+  // ---------------------------
+  static const String changePassword = 'customer/change-password';
+
 }
