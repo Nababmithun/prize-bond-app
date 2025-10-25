@@ -5,12 +5,15 @@ import '../core/network/api_client.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _repo;
+
   AuthViewModel(this._repo);
 
+  //Loading
   bool _loading = false;
   String? _error;
 
   bool get isLoading => _loading;
+
   String? get error => _error;
 
   Future<bool> tryAutoAttachToken() async {
@@ -22,8 +25,10 @@ class AuthViewModel extends ChangeNotifier {
     return false;
   }
 
+  //Token
   Future<bool> isLoggedIn() => TokenStorage.isLoggedIn();
 
+  //Login
   Future<bool> login(String email, String password) async {
     _setLoading(true);
     final res = await _repo.login(email: email, password: password);
@@ -38,6 +43,7 @@ class AuthViewModel extends ChangeNotifier {
     return ok;
   }
 
+  //Register
   Future<bool> register({
     required String name,
     required String phone,
@@ -65,6 +71,7 @@ class AuthViewModel extends ChangeNotifier {
     return ok;
   }
 
+  //Verify -OTP
   Future<bool> verifyOtp(String otp, {String? emailArg}) async {
     final email = emailArg ?? (await TokenStorage.getPendingEmail()) ?? '';
     if (email.isEmpty) {
@@ -87,7 +94,7 @@ class AuthViewModel extends ChangeNotifier {
     return ok;
   }
 
-
+  //Forgot Password
   Future<bool> forgotPassword(String email) async {
     _setLoading(true);
     final res = await _repo.forgotPassword(email: email);
@@ -98,6 +105,7 @@ class AuthViewModel extends ChangeNotifier {
     return ok;
   }
 
+  //Reset Password
   Future<bool> resetPassword({
     required String email,
     required String otp,
@@ -116,13 +124,13 @@ class AuthViewModel extends ChangeNotifier {
     return ok;
   }
 
-
-
+  //LogOut
   Future<void> logout() async {
     await _repo.logout();
     notifyListeners();
   }
 
+  //Loading
   void _setLoading(bool v) {
     _loading = v;
     notifyListeners();

@@ -3,18 +3,25 @@ import '../data/repositories/bond_repository.dart';
 
 class BondViewModel extends ChangeNotifier {
   final BondRepository _repo;
+
   BondViewModel(this._repo);
 
+  //Loading
   bool _loading = false;
+
   bool get isLoading => _loading;
 
+  //List
   List<Map<String, dynamic>> _series = [];
+
   List<Map<String, dynamic>> get series => _series;
 
+  //Var
   String? selectedSeriesId;
   String? selectedSeriesCode;
   String? message;
 
+  //List of Series
   Future<void> loadSeries() async {
     _loading = true;
     notifyListeners();
@@ -37,6 +44,7 @@ class BondViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  //Single bond
   Future<bool> submitSingle({
     required String price,
     required String code,
@@ -61,6 +69,7 @@ class BondViewModel extends ChangeNotifier {
     return res['ok'] == true;
   }
 
+  //Multi bond
   Future<bool> submitBulk({
     required String price,
     required String startPrizeBondNumber,

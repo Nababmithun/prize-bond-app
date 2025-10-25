@@ -5,6 +5,7 @@ import '../../core/network/endpoints.dart';
 class BondRepository {
   final Dio _dio = ApiClient.dio;
 
+  //List of series
   Future<Map<String, dynamic>> fetchSeries() async {
     try {
       final res = await _dio.get(Endpoints.bondSeriesList);
@@ -14,7 +15,7 @@ class BondRepository {
       } else {
         return {
           'ok': false,
-          'message': res.data?['message'] ?? 'Failed to load series list'
+          'message': res.data?['message'] ?? 'Failed to load series list',
         };
       }
     } on DioException catch (e) {
@@ -22,6 +23,7 @@ class BondRepository {
     }
   }
 
+  //Single Bond
   Future<Map<String, dynamic>> createSingle({
     required String bondSeriesId,
     required String price,
@@ -38,13 +40,14 @@ class BondRepository {
       );
       return {
         'ok': res.statusCode == 200 && res.data['success'] == true,
-        'message': res.data['message'] ?? 'Prize bond created successfully'
+        'message': res.data['message'] ?? 'Prize bond created successfully',
       };
     } on DioException catch (e) {
       return {'ok': false, 'message': e.message ?? 'Network error'};
     }
   }
 
+  //Multi -bond
   Future<Map<String, dynamic>> createBulk({
     required String bondSeriesId,
     required String price,
@@ -63,7 +66,7 @@ class BondRepository {
       );
       return {
         'ok': res.statusCode == 200 && res.data['success'] == true,
-        'message': res.data['message'] ?? 'Prize bond created successfully'
+        'message': res.data['message'] ?? 'Prize bond created successfully',
       };
     } on DioException catch (e) {
       return {'ok': false, 'message': e.message ?? 'Network error'};
